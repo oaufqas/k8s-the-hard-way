@@ -1,0 +1,4 @@
+---
+pkidir: "{{ playbook_dir }}/../pki-certificates"
+configsdir: "{{ playbook_dir }}/../configs"
+master_node_addr: "control-plane.kubernetes.local"

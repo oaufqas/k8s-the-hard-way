@@ -1,0 +1,3 @@
+---
+pkidir: "{{ playbook_dir }}/../pki-certificates"
+configsdir: "{{ playbook_dir }}/../configs"

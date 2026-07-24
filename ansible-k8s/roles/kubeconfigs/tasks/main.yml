@@ -1,0 +1,70 @@
+---
+
+- name: Checking a local directory for configs..
+  file:
+    path: "{{ configsdir }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation kubeconfigs..
+  block:
+  - name: Generation kubeconfigs for cluster components..
+    shell:
+      cmd: >
+        kubectl config set-cluster kubernetes-the-hard-way \
+          --certificate-authority={{ pkidir }}/ca.pem \
+          --embed-certs=true \
+          --server=https://{{ master_node_addr }}:6443 \
+          --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig &&
+
+        kubectl config set-credentials {{ item.component_user }} \
+          --client-certificate={{ pkidir }}/{{ item.component_name }}.pem \
+          --client-key={{ pkidir }}/{{ item.component_name }}-key.pem \
+          --embed-certs=true \
+          --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig &&
+
+        kubectl config set-context default \
+          --cluster=kubernetes-the-hard-way \
+          --user={{ item.component_user }} \
+          --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig &&
+
+        kubectl config use-context default --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig
+      chdir: "{{ configsdir }}"
+      creates: "{{ item.component_name }}.kubeconfig"
+    loop: 
+      - { component_name: "kube-proxy", component_user: "system:kube-proxy" }
+      - { component_name: "kube-controller-manager", component_user: "system:kube-controller-manager" }
+      - { component_name: "kube-scheduler", component_user: "system:kube-scheduler" }
+      - { component_name: "admin", component_user: "admin" }
+
+
+  - name: Generation kubeconfigs for worker-nodes..
+    shell:
+      cmd: >
+        kubectl config set-cluster kubernetes-the-hard-way \
+          --certificate-authority={{ pkidir }}/ca.pem \
+          --embed-certs=true \
+          --server=https://{{ master_node_addr }}:6443 \
+          --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig &&
+
+        kubectl config set-credentials system:node:{{ item }} \
+          --client-certificate={{ pkidir }}/{{ item }}.pem \
+          --client-key={{ pkidir }}/{{ item }}-key.pem \
+          --embed-certs=true \
+          --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig &&
+
+        kubectl config set-context default \
+          --cluster=kubernetes-the-hard-way \
+          --user=system:node:{{ item }} \
+          --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig &&
+
+        kubectl config use-context default --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig
+      chdir: "{{ configsdir }}"
+      creates: "{{ item }}.kubeconfig"
+    loop: "{{ groups['workers'] }}"
+
+  delegate_to: localhost
+  run_once: true

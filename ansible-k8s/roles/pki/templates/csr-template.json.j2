@@ -1,0 +1,12 @@
+{
+  "CN": "{{ cert_cn }}",
+  "key": { "algo": "rsa", "size": 2048 },
+  "names": [
+    {
+      "C": "country", 
+      "L": "location", 
+      "O": "{{ cert_org }}", 
+      "OU": "kubernetes-the-hard-way" 
+    }
+  ]
+}

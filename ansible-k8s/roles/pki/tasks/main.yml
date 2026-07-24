@@ -1,0 +1,141 @@
+---
+
+- name: Checking the installation of cfssl utilites..
+  apt:
+    name:
+      - golang-cfssl
+    state: present
+    update_cache: yes
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Creating a local directory for PKI..
+  file:
+    path: "{{ pkidir }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation CA (Certificate Authority)..
+  block:
+    - name: Generation ca-config.json from template..
+      template: 
+        src: ca-config.json.j2
+        dest: "{{ pkidir }}/ca-config.json"
+
+    - name: Generation ca-csr.json..
+      template:
+        src: csr-template.json.j2
+        dest: "{{ pkidir }}/ca-csr.json"
+      vars:
+        cert_cn: "Kubernetes-CA"
+        cert_org: "Kubernetes"
+
+    - name: Generation CA-certificate..
+      shell:
+        cmd: "cfssl genkey -initca ca-csr.json | cfssljson -bare ca"
+        chdir: "{{ pkidir }}"
+        creates: ca.pem
+
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation contol-plane certificates (Controller-Manager, Scheduler, Proxy, Service-Account, Kubectl)..
+  block:
+  - name: Generation *csr.json files..
+    template:
+      src: "csr-template.json.j2"
+      dest: "{{ pkidir }}/{{ item.name }}-csr.json"
+    vars:
+      cert_cn: "{{ item.cn }}"
+      cert_org: "{{ item.org }}"
+    loop:
+      - { name: "admin", cn: "admin", org: "system:masters" }
+      - { name: "kube-controller-manager", cn: "system:kube-controller-manager", org: "system:kube-controller-manager" }
+      - { name: "kube-scheduler", cn: "system:kube-scheduler", org: "system:kube-scheduler" }
+      - { name: "kube-proxy", cn: "system:kube-proxy", org: "system:node-proxier" }
+      - { name: "service-account", cn: "service-accounts", org: "Kubernetes" }
+
+  - name: Generation PKI-certificates..
+    shell:
+      cmd: "cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes {{ item.name }}-csr.json | cfssljson -bare {{ item.name }}"
+      chdir: "{{ pkidir }}"
+      creates: "{{ item.name }}.pem"
+    loop:
+      - { name: "admin" }
+      - { name: "kube-controller-manager" }
+      - { name: "kube-scheduler" }
+      - { name: "kube-proxy" }
+      - { name: "service-account" }
+
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation certificates for worker-nodes..
+  block:
+  - name: Generation *csr.json files..
+    template:
+      src: "csr-template.json.j2"
+      dest: "{{ pkidir }}/{{ item }}-csr.json"
+    vars:
+      cert_cn: "system:node:{{ item }}"
+      cert_org: "system:nodes"
+    loop: "{{ groups['workers'] }}"
+
+  - name: Generation worker-node certificates..
+    shell:
+      cmd: >
+        cfssl gencert 
+        -ca=ca.pem 
+        -ca-key=ca-key.pem 
+        -config=ca-config.json 
+        -profile=kubernetes 
+        -hostname={{ item }},{{ hostvars[item]['ansible_host'] }} {{ item }}-csr.json | cfssljson -bare {{ item }}
+      chdir: "{{ pkidir }}"
+      creates: "{{ item }}.pem"
+    loop: "{{ groups['workers'] }}"
+
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation certificate for Kube-Apiserver..
+  block:
+  - name: Generation *csr.json files..
+    template:
+      src: "csr-template.json.j2"
+      dest: "{{ pkidir }}/{{ item }}-csr.json"
+    vars:
+      cert_cn: "kubernetes"
+      cert_org: "Kubernetes"
+    loop: "{{ groups['masters'] }}"
+
+  - name: Generation kube-apiserver certificates..
+    shell:
+      cmd: >
+        cfssl gencert 
+        -ca=ca.pem 
+        -ca-key=ca-key.pem 
+        -config=ca-config.json 
+        -profile=kubernetes 
+        -hostname=10.32.0.1,127.0.0.1,kubernetes,kubernetes.default.svc,kubernetes.default.svc.cluster.local,{{ item }},{{ item }}.default.svc,{{ item }}.default.svc.cluster.local,{{ item }}.kubernetes.local,{{ hostvars[item]['ansible_host'] }} 
+        {{ item }}-csr.json | cfssljson -bare {{ item }}
+      chdir: "{{ pkidir }}"
+      creates: "{{ item }}.pem"
+    loop: "{{ groups['masters'] }}"
+
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Cleaning up configuration files *.json *.csr 
+  ansible.builtin.shell:
+    cmd: "rm -f {{ pkidir }}/*.json {{ pkidir }}/*.csr"
+  delegate_to: localhost
+  run_once: true
+  failed_when: false 

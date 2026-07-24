@@ -1,0 +1,8 @@
+---
+
+- name: Deployment Kubernetes The Hard Way
+  hosts: k8s
+  gather_facts: false
+  roles: 
+    - pki
+    - kubeconfigs
