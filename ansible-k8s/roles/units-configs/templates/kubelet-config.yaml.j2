@@ -1,0 +1,30 @@
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+address: "0.0.0.0"
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+  x509:
+    clientCAFile: "/var/lib/kubelet/ca.pem"
+authorization:
+  mode: Webhook
+cgroupDriver: systemd
+containerRuntimeEndpoint: "unix:///var/run/containerd/containerd.sock"
+enableServer: true
+failSwapOn: false
+maxPods: 32
+memorySwap:
+  swapBehavior: NoSwap
+port: 10250
+resolvConf: "/run/systemd/resolve/resolv.conf"
+registerNode: true
+runtimeRequestTimeout: "15m"
+podCIDR: "{{ worker_cidr }}"
+clusterDNS:
+  - "{{ cluster_dns }}"
+clusterDomain: "{{ master_node_addr }}"
+podInfraContainerImage: "registry.k8s.io/pause:3.9"
+tlsCertFile: "/var/lib/kubelet/{{ worker_name }}.pem"
+tlsPrivateKeyFile: "/var/lib/kubelet/{{ worker_name }}-key.pem"

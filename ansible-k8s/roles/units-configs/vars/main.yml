@@ -1,0 +1,9 @@
+---
+encryption_key: "ncmbO+4ZWyNvMnc7JACvhuqGAKnspkuzkeVVBbaV2Cw=" # head -c 32 /dev/urandom | base64
+cluster_etcd_token: "etcd-cluster-0"
+master_node_addr: "control-plane.kubernetes.local"
+service_ip_range: "10.32.0.0/24"
+cluster_cidr: "10.200.0.0/16"
+cluster_dns: "10.32.0.10"
+cfgdir: "{{ playbook_dir }}/../configs"
+unitsdir: "{{ playbook_dir }}/../units"

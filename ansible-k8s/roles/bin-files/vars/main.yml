@@ -1,0 +1,3 @@
+---
+bindir: "{{ playbook_dir }}/../binaries"
+architecture: amd64 # amd64/arm64

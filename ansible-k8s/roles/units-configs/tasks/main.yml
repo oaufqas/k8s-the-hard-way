@@ -1,0 +1,62 @@
+---
+- name: Checking a local directory for configs..
+  file:
+    path: "{{ cfgdir }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Checking a local directory for units..
+  file:
+    path: "{{ unitsdir }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Сopying configuration files..
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'containerd-config.toml', dest: "{{ cfgdir }}/containerd-config.toml" }
+    - { src: 'kube-apiserver-to-kubelet.yaml', dest: "{{ cfgdir }}/kube-apiserver-to-kubelet.yaml" }
+    - { src: 'kube-scheduler.yaml', dest: "{{ cfgdir }}/kube-scheduler.yaml" }
+    - { src: 'containerd.service', dest: "{{ unitsdir }}/containerd.service" }
+    - { src: 'kube-proxy.service', dest: "{{ unitsdir }}/kube-proxy.service" }
+    - { src: 'kube-scheduler.service', dest: "{{ unitsdir }}/kube-scheduler.service" }
+    - { src: 'kubelet.service', dest: "{{ unitsdir }}/kubelet.service" }
+
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation configuration files..
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'encryption-config.yaml.j2', dest: "{{ cfgdir }}/encryption-config.yaml" }
+    - { src: 'kube-proxy-config.yaml.j2', dest: "{{ cfgdir }}/kube-proxy-config.yaml" }
+    - { src: 'etcd.service.j2', dest: "{{ unitsdir }}/etcd.service" }
+    - { src: 'kube-apiserver.service.j2', dest: "{{ unitsdir }}/kube-apiserver.service" }
+    - { src: 'kube-controller-manager.service.j2', dest: "{{ unitsdir }}/kube-controller-manager.service"}
+
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation kubelet-config files..
+  template:
+    src: "kubelet-config.yaml.j2"
+    dest: "{{ cfgdir }}/kubelet-config-{{ item }}.yaml"
+  vars:
+    worker_name: "{{ item }}"
+    worker_cidr: "{{ hostvars[item]['pod_cidr'] }}"
+  loop: "{{ groups['workers'] }}"
+
+  delegate_to: localhost
+  run_once: true

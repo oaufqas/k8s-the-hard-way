@@ -10,7 +10,7 @@
   run_once: true
 
 
-- name: Creating a local directory for PKI..
+- name: Checking a local directory for PKI..
   file:
     path: "{{ pkidir }}"
     state: directory
@@ -109,11 +109,10 @@
   - name: Generation *csr.json files..
     template:
       src: "csr-template.json.j2"
-      dest: "{{ pkidir }}/{{ item }}-csr.json"
+      dest: "{{ pkidir }}/kubernetes-csr.json"
     vars:
       cert_cn: "kubernetes"
       cert_org: "Kubernetes"
-    loop: "{{ groups['masters'] }}"
 
   - name: Generation kube-apiserver certificates..
     shell:
@@ -123,11 +122,10 @@
         -ca-key=ca-key.pem 
         -config=ca-config.json 
         -profile=kubernetes 
-        -hostname=10.32.0.1,127.0.0.1,kubernetes,kubernetes.default.svc,kubernetes.default.svc.cluster.local,{{ item }},{{ item }}.default.svc,{{ item }}.default.svc.cluster.local,{{ item }}.kubernetes.local,{{ hostvars[item]['ansible_host'] }} 
-        {{ item }}-csr.json | cfssljson -bare {{ item }}
+        -hostname=10.32.0.1,127.0.0.1,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local,{{ groups['masters'][0] }},{{ groups['masters'][0] }}.default.svc,{{ groups['masters'][0] }}.default.svc.cluster.local,{{ groups['masters'][0] }}.kubernetes.local,{{ hostvars[groups['masters'][0]]['ansible_host'] }} 
+        kubernetes-csr.json | cfssljson -bare kubernetes
       chdir: "{{ pkidir }}"
-      creates: "{{ item }}.pem"
-    loop: "{{ groups['masters'] }}"
+      creates: "kubernetes.pem"
 
   delegate_to: localhost
   run_once: true

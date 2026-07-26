@@ -1,0 +1,33 @@
+---
+- name: Checking a local directory for binaries..
+  file:
+    path: "{{ bindir }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Reading a list of links..
+  slurp: 
+    src: "{{ role_path }}/files/downloads-{{ architecture }}.txt"
+  register: links_binaries_files
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Parsing links into an Ansible array..
+  ansible.builtin.set_fact:
+    download_links: "{{ (links_binaries_files.content | b64decode).splitlines() | reject('match', '^\\s*$') | list }}"
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Local installation all binaries files..
+  get_url:
+    url: "{{ item }}"
+    dest: "{{ bindir }}/{{ item | basename }}"
+    mode: 644
+  loop: "{{ download_links }}"
+  delegate_to: localhost
+  run_once: true

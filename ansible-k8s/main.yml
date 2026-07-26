@@ -4,5 +4,8 @@
   hosts: k8s
   gather_facts: false
   roles: 
-    - pki
-    - kubeconfigs
+    # - pki
+    # - kubeconfigs
+    # - units-configs
+    - bin-files
+    

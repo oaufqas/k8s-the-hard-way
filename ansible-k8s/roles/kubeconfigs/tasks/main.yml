@@ -2,7 +2,7 @@
 
 - name: Checking a local directory for configs..
   file:
-    path: "{{ configsdir }}"
+    path: "{{ kubecfgdir }}"
     state: directory
     mode: '0700'
   delegate_to: localhost
@@ -18,21 +18,21 @@
           --certificate-authority={{ pkidir }}/ca.pem \
           --embed-certs=true \
           --server=https://{{ master_node_addr }}:6443 \
-          --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig &&
+          --kubeconfig={{ kubecfgdir }}/{{ item.component_name }}.kubeconfig &&
 
         kubectl config set-credentials {{ item.component_user }} \
           --client-certificate={{ pkidir }}/{{ item.component_name }}.pem \
           --client-key={{ pkidir }}/{{ item.component_name }}-key.pem \
           --embed-certs=true \
-          --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig &&
+          --kubeconfig={{ kubecfgdir }}/{{ item.component_name }}.kubeconfig &&
 
         kubectl config set-context default \
           --cluster=kubernetes-the-hard-way \
           --user={{ item.component_user }} \
-          --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig &&
+          --kubeconfig={{ kubecfgdir }}/{{ item.component_name }}.kubeconfig &&
 
-        kubectl config use-context default --kubeconfig={{ configsdir }}/{{ item.component_name }}.kubeconfig
-      chdir: "{{ configsdir }}"
+        kubectl config use-context default --kubeconfig={{ kubecfgdir }}/{{ item.component_name }}.kubeconfig
+      chdir: "{{ kubecfgdir }}"
       creates: "{{ item.component_name }}.kubeconfig"
     loop: 
       - { component_name: "kube-proxy", component_user: "system:kube-proxy" }
@@ -48,21 +48,21 @@
           --certificate-authority={{ pkidir }}/ca.pem \
           --embed-certs=true \
           --server=https://{{ master_node_addr }}:6443 \
-          --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig &&
+          --kubeconfig={{ kubecfgdir }}/{{ item }}.kubeconfig &&
 
         kubectl config set-credentials system:node:{{ item }} \
           --client-certificate={{ pkidir }}/{{ item }}.pem \
           --client-key={{ pkidir }}/{{ item }}-key.pem \
           --embed-certs=true \
-          --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig &&
+          --kubeconfig={{ kubecfgdir }}/{{ item }}.kubeconfig &&
 
         kubectl config set-context default \
           --cluster=kubernetes-the-hard-way \
           --user=system:node:{{ item }} \
-          --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig &&
+          --kubeconfig={{ kubecfgdir }}/{{ item }}.kubeconfig &&
 
-        kubectl config use-context default --kubeconfig={{ configsdir }}/{{ item }}.kubeconfig
-      chdir: "{{ configsdir }}"
+        kubectl config use-context default --kubeconfig={{ kubecfgdir }}/{{ item }}.kubeconfig
+      chdir: "{{ kubecfgdir }}"
       creates: "{{ item }}.kubeconfig"
     loop: "{{ groups['workers'] }}"
 
