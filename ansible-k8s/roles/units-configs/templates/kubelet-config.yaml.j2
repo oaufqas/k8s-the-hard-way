@@ -24,7 +24,7 @@ runtimeRequestTimeout: "15m"
 podCIDR: "{{ worker_cidr }}"
 clusterDNS:
   - "{{ cluster_dns }}"
-clusterDomain: "{{ master_node_addr }}"
+clusterDomain: "{{ cluster_domain }}"
 podInfraContainerImage: "registry.k8s.io/pause:3.9"
 tlsCertFile: "/var/lib/kubelet/{{ worker_name }}.pem"
 tlsPrivateKeyFile: "/var/lib/kubelet/{{ worker_name }}-key.pem"

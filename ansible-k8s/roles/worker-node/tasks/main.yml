@@ -1,0 +1,116 @@
+---
+- name: Settings up worker-nodes..
+  when: inventory_hostname in groups['workers']
+  block:
+
+  - name: Сhecking for the existence of data directories (Strict permissions)..
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0700'
+    loop: 
+      - '/var/lib/kubernetes'
+      - '/var/lib/kubelet/'
+      - '/var/run/kubernetes/'
+      - '/var/lib/kube-proxy/'
+      
+
+  - name: Сhecking for the existence of config directories (Open for read)..
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop: 
+      - '/etc/cni/net.d'
+      - '/opt/cni/bin'
+      - '/etc/containerd/'
+      - '/home/{{ ansible_user }}/.kube/'
+
+
+  - name: Copy configuration files and certificates on worker-nodes (Strict permissions)..
+    copy: 
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: '0700'
+    loop:
+      - { src: "{{ pkidir }}/ca.pem", dest: "/var/lib/kubelet/" }
+      - { src: "{{ pkidir }}/{{ inventory_hostname }}.pem", dest: "/var/lib/kubelet/" }
+      - { src: "{{ pkidir }}/{{ inventory_hostname }}-key.pem", dest: "/var/lib/kubelet/" }
+      - { src: "{{ kubecfgdir }}/{{ inventory_hostname }}.kubeconfig", dest: "/var/lib/kubelet/kubeconfig" }
+      - { src: "{{ cfgdir }}/kubelet-config-{{ inventory_hostname }}.yaml", dest: "/var/lib/kubelet/kubelet-config.yaml" }
+      - { src: "{{ kubecfgdir }}/kube-proxy.kubeconfig", dest: "/var/lib/kube-proxy/kubeconfig" }
+      - { src: "{{ cfgdir }}/kube-proxy-config.yaml", dest: "/var/lib/kube-proxy/" }
+
+
+  - name: Copy configuration files, units and certificates on worker-nodes (Open for read)..
+    copy: 
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: '0755'
+    loop:
+      - { src: "{{ cfgdir }}/containerd-config.toml", dest: "/etc/containerd/config.toml" }
+      - { src: "{{ unitsdir }}/containerd.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ unitsdir }}/kubelet.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ unitsdir }}/kube-proxy.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "/home/{{ ansible_user }}/.kube/config" }
+
+
+  - name: Copy binaries files on worker-nodes..
+    copy: 
+      src: "{{ bindir }}/{{ item }}"
+      dest: "/usr/local/bin"
+      mode: '0711'
+    loop:
+      - 'containerd'
+      - 'containerd-shim-runc-v2'
+      - 'containerd-stress'
+      - 'crictl'
+      - 'ctr'
+      - 'runc'
+      - 'kubelet'
+      - 'kube-proxy'
+      - 'kubectl'
+
+
+  - name: Copy all CNI-plugins to /opt/cni/bin..
+    copy:
+      src: "{{ item }}"
+      dest: "/opt/cni/bin/"
+    with_fileglob:
+      - "{{ bindir }}/cni-plugins/*"
+
+
+  - name: Disabling swap memory (temporarily)..
+    command:
+      cmd: "swapoff -a"
+    changed_when: false
+
+
+  - name: Disabling swap memory in file /etc/fstab (permanently)..
+    lineinfile:
+      path: /etc/fstab
+      regexp: '^([^#].*swap.*)$'
+      line: '# \1'
+      backrefs: true
+
+
+  - name: Start and enable Containerd..
+    systemd:
+      name: containerd
+      state: started
+      enabled: yes
+      daemon_reload: yes
+
+
+  - name: Start and enable Kubelet..
+    systemd:
+      name: kubelet
+      state: started
+      enabled: yes
+
+
+  - name: Start and enable Kube-proxy..
+    systemd:
+      name: kube-proxy
+      state: started
+      enabled: yes

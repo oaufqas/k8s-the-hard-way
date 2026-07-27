@@ -1,3 +1,9 @@
 ---
 bindir: "{{ playbook_dir }}/../binaries"
 architecture: amd64 # amd64/arm64
+
+archive_rules:
+  "crictl-v1.32.0-linux-amd64.tar.gz": "-C {{ bindir }}/"
+  "cni-plugins-linux-amd64-v1.6.2.tgz": "-C {{ bindir }}/cni-plugins/"
+  "containerd-2.1.0-beta.0-linux-amd64.tar.gz": "--strip-components=1 -C {{ bindir }}/"
+  "etcd-v3.6.0-rc.3-linux-amd64.tar.gz": "--strip-component 1 etcd-v3.6.0-rc.3-linux-amd64/etcdctl etcd-v3.6.0-rc.3-linux-amd64/etcd -C {{ bindir }}/"

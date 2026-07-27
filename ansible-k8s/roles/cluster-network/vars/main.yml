@@ -1,0 +1,5 @@
+---
+manifestdir: "{{ playbook_dir }}/../manifests"
+kubecfgdir: "{{ playbook_dir }}/../kubeconfigs"
+cluster_cidr: "10.200.0.0/16"
+cluster_dns: "10.32.0.10"

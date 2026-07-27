@@ -1,33 +1,70 @@
 ---
-- name: Checking a local directory for binaries..
-  file:
-    path: "{{ bindir }}"
-    state: directory
-    mode: '0700'
+- name: Local build of cluster binaries
   delegate_to: localhost
   run_once: true
+  block:
+  - name: Checking a local directory for binaries..
+    file:
+      path: "{{ bindir }}/cni-plugins"
+      state: directory
+      mode: '0700'
 
 
-- name: Reading a list of links..
-  slurp: 
-    src: "{{ role_path }}/files/downloads-{{ architecture }}.txt"
-  register: links_binaries_files
-  delegate_to: localhost
-  run_once: true
+  - name: Reading a list of links..
+    slurp: 
+      src: "{{ role_path }}/files/downloads-{{ architecture }}.txt"
+    register: links_binaries_files
 
 
-- name: Parsing links into an Ansible array..
-  ansible.builtin.set_fact:
-    download_links: "{{ (links_binaries_files.content | b64decode).splitlines() | reject('match', '^\\s*$') | list }}"
-  delegate_to: localhost
-  run_once: true
+  - name: Parsing links into an Ansible array..
+    set_fact:
+      download_links: "{{ (links_binaries_files.content | b64decode).splitlines() | reject('match', '^\\s*$') | list }}"
 
 
-- name: Local installation all binaries files..
-  get_url:
-    url: "{{ item }}"
-    dest: "{{ bindir }}/{{ item | basename }}"
-    mode: 644
-  loop: "{{ download_links }}"
-  delegate_to: localhost
-  run_once: true
+  - name: Parsing .tar.gz archive names into an Ansible array..
+    set_fact:
+      tar_gz_archives: "{{ download_links | map('basename') | select('search', '\\.tar\\.gz$|\\.tgz$') | list }}"
+
+
+  # - name: console log download links
+  #   debug:
+  #     var: download_links
+
+
+  # - name: console log tar gz archives
+  #   debug:
+  #     var: tar_gz_archives
+
+
+  - name: Local installation all binaries files..
+    get_url:
+      url: "{{ item }}"
+      dest: "{{ bindir }}/{{ item | basename }}"
+      mode: '0755'
+    loop: "{{ download_links }}"
+
+
+  - name: Extracting archives..
+    shell:
+      cmd: "tar -xvf {{ item }} {{ archive_rules[item] | default('') }}"
+      chdir: "{{ bindir }}"
+    loop: "{{ tar_gz_archives }}"
+
+
+  - name: Checking runc.amd64 is exists
+    stat:
+      path: "{{ bindir }}/runc.{{ architecture }}"
+    register: runc_file
+
+
+  - name: Rename runc
+    command:
+      cmd: "mv {{ bindir }}/runc.{{ architecture }} {{ bindir }}/runc"
+    when: runc_file.stat.exists
+
+
+  - name: Cleaning up .tar.gz arhives
+    file: 
+      path: "{{ bindir }}/{{ item }}"
+      state: absent
+    loop: "{{ tar_gz_archives }}"

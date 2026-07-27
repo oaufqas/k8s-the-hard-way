@@ -1,0 +1,64 @@
+---
+- name: Checking a local directory for manifests..
+  file:
+    path: "{{ manifestdir }}"
+    state: directory
+  delegate_to: localhost
+  run_once: true
+     
+
+- name: Determining the actual user and their home directory
+  ansible.builtin.set_fact:
+    real_home: "{{ ansible_env.HOME | default('/root') if (ansible_env.SUDO_USER is not defined) else '/home/' ~ ansible_env.SUDO_USER }}"
+
+
+- name: Checking a local directory for kubeconfig..
+  file:
+    path: "{{ real_home }}/.kube"
+    state: directory
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Сopying manifest and configuration files..
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'kube-apiserver-to-kubelet.yaml', dest: "{{ manifestdir }}/" }
+    - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "{{ real_home }}/.kube/config" }
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Generation manifest files..
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: 'coredns.yaml.j2', dest: "{{ manifestdir }}/coredns.yaml" }
+    - { src: 'calico.yaml.j2', dest: "{{ manifestdir }}/calico.yaml" }
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Verifying the python3-kubernetes installation..
+  apt:
+    name: 
+      - python3-kubernetes
+    state: present
+    update_cache: yes
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Applying manifests to a kubernetes cluster..
+  kubernetes.core.k8s:
+    src: "{{ manifestdir }}/{{ item }}"
+    state: present
+  loop:
+    - 'kube-apiserver-to-kubelet.yaml'
+    - 'calico.yaml'
+    - 'coredns.yaml'
+  delegate_to: localhost
+  run_once: true

@@ -23,7 +23,6 @@
     dest: "{{ item.dest }}"
   loop:
     - { src: 'containerd-config.toml', dest: "{{ cfgdir }}/containerd-config.toml" }
-    - { src: 'kube-apiserver-to-kubelet.yaml', dest: "{{ cfgdir }}/kube-apiserver-to-kubelet.yaml" }
     - { src: 'kube-scheduler.yaml', dest: "{{ cfgdir }}/kube-scheduler.yaml" }
     - { src: 'containerd.service', dest: "{{ unitsdir }}/containerd.service" }
     - { src: 'kube-proxy.service', dest: "{{ unitsdir }}/kube-proxy.service" }

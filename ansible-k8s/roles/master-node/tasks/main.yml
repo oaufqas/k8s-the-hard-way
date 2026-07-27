@@ -1,1 +1,100 @@
 ---
+- name: Settings up control plane
+  when: inventory_hostname in groups['masters']
+  block:
+
+  - name: Сhecking for the existence of data directories (Strict permissions)..
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0700'
+    loop: 
+      - '/var/lib/kubernetes/'
+      - '/var/lib/etcd/'
+
+  - name: Сhecking for the existence of config directories (Open for read)..
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop: 
+      - '/etc/etcd/'
+      - '/etc/kubernetes/config/'
+      - '/home/{{ ansible_user }}/.kube/'
+
+
+  - name: Copy configuration files and certificates on control-plane (Strict permissions)..
+    copy: 
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: '0700'
+    loop:
+      - { src: "{{ pkidir }}/ca.pem", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ pkidir }}/ca-key.pem", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ pkidir }}/kubernetes.pem", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ pkidir }}/kubernetes-key.pem", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ pkidir }}/service-account.pem", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ pkidir }}/service-account-key.pem", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ kubecfgdir }}/kube-controller-manager.kubeconfig", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ kubecfgdir }}/kube-scheduler.kubeconfig", dest: "/var/lib/kubernetes/" }
+      - { src: "{{ cfgdir }}/encryption-config.yaml", dest: "/var/lib/kubernetes/" }
+
+
+  - name: Copy configuration files, units and certificates on control-plane (Open for read)..
+    copy: 
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: '0755'
+    loop:
+      - { src: "{{ pkidir }}/ca.pem", dest: "/etc/etcd/" }
+      - { src: "{{ pkidir }}/kubernetes.pem", dest: "/etc/etcd/" }
+      - { src: "{{ pkidir }}/kubernetes-key.pem", dest: "/etc/etcd/" }
+      - { src: "{{ cfgdir }}/kube-scheduler.yaml", dest: "/etc/kubernetes/config" }
+      - { src: "{{ unitsdir }}/etcd.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ unitsdir }}/kube-apiserver.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ unitsdir }}/kube-controller-manager.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ unitsdir }}/kube-scheduler.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "/home/{{ ansible_user }}/.kube/config" }
+
+
+  - name: Copy binaries files on control-plane..
+    copy: 
+      src: "{{ bindir }}/{{ item }}"
+      dest: "/usr/local/bin"
+      mode: '0711'
+    loop:
+      - 'etcd'
+      - 'etcdctl'
+      - 'kube-apiserver'
+      - 'kube-controller-manager'
+      - 'kube-scheduler'
+      - 'kubectl'
+
+
+  - name: Start and enable Etcd..
+    systemd:
+      name: etcd.service
+      state: started
+      enabled: yes
+      daemon_reload: yes
+
+
+  - name: Start and enable Controller-Manager..
+    systemd:
+      name: kube-controller-manager
+      state: started
+      enabled: yes
+
+
+  - name: Start and enable Scheduler..
+    systemd:
+      name: kube-scheduler
+      state: started
+      enabled: yes
+
+
+  - name: Start and enable Kube-Apiserver..
+    systemd:
+      name: kube-apiserver
+      state: started
+      enabled: yes
