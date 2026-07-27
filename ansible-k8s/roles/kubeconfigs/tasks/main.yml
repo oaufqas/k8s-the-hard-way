@@ -1,16 +1,16 @@
 ---
-
-- name: Checking a local directory for configs..
-  file:
-    path: "{{ kubecfgdir }}"
-    state: directory
-    mode: '0700'
+- name: Local generation kubeconfigs..
   delegate_to: localhost
   run_once: true
-
-
-- name: Generation kubeconfigs..
   block:
+
+  - name: Checking a local directory for configs..
+    file:
+      path: "{{ kubecfgdir }}"
+      state: directory
+      mode: '0700'
+
+
   - name: Generation kubeconfigs for cluster components..
     shell:
       cmd: >
@@ -65,6 +65,3 @@
       chdir: "{{ kubecfgdir }}"
       creates: "{{ item }}.kubeconfig"
     loop: "{{ groups['workers'] }}"
-
-  delegate_to: localhost
-  run_once: true

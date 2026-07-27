@@ -1,7 +1,4 @@
 ---
-bindir: "{{ playbook_dir }}/../binaries"
-architecture: amd64 # amd64/arm64
-
 archive_rules:
   "crictl-v1.32.0-linux-amd64.tar.gz": "-C {{ bindir }}/"
   "cni-plugins-linux-amd64-v1.6.2.tgz": "-C {{ bindir }}/cni-plugins/"

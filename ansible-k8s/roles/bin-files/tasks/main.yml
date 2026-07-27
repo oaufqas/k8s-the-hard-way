@@ -1,8 +1,9 @@
 ---
-- name: Local build of cluster binaries
+- name: Local build of cluster binaries..
   delegate_to: localhost
   run_once: true
   block:
+  
   - name: Checking a local directory for binaries..
     file:
       path: "{{ bindir }}/cni-plugins"

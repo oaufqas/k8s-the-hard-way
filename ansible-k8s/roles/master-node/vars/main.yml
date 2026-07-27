@@ -1,6 +1,1 @@
 ---
-pkidir: "{{ playbook_dir }}/../pki-certificates"
-kubecfgdir: "{{ playbook_dir }}/../kubeconfigs"
-bindir: "{{ playbook_dir }}/../binaries"
-cfgdir: "{{ playbook_dir }}/../configs"
-unitsdir: "{{ playbook_dir }}/../units"

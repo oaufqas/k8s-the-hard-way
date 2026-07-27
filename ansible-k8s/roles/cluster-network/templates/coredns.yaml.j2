@@ -64,11 +64,10 @@ data:
           fallthrough in-addr.arpa ip6.arpa
         }
         prometheus :9153
-        forward . /run/systemd/resolve/resolv.conf {
+        forward . 8.8.8.8 1.1.1.1 {
           max_concurrent 1000
         }
         cache 30
-        loop
         reload
         loadbalance
     }

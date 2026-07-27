@@ -1,50 +1,46 @@
 ---
-- name: Checking the installation of cfssl utilites..
-  apt:
-    name:
-      - golang-cfssl
-    state: present
-    update_cache: yes
+- name: Local generation all certificates..
   delegate_to: localhost
   run_once: true
-
-
-- name: Checking a local directory for PKI..
-  file:
-    path: "{{ pkidir }}"
-    state: directory
-    mode: '0700'
-  delegate_to: localhost
-  run_once: true
-
-
-- name: Generation CA (Certificate Authority)..
   block:
-    - name: Generation ca-config.json from template..
-      template: 
-        src: ca-config.json.j2
-        dest: "{{ pkidir }}/ca-config.json"
 
-    - name: Generation ca-csr.json..
-      template:
-        src: csr-template.json.j2
-        dest: "{{ pkidir }}/ca-csr.json"
-      vars:
-        cert_cn: "Kubernetes-CA"
-        cert_org: "Kubernetes"
-
-    - name: Generation CA-certificate..
-      shell:
-        cmd: "cfssl genkey -initca ca-csr.json | cfssljson -bare ca"
-        chdir: "{{ pkidir }}"
-        creates: ca.pem
-
-  delegate_to: localhost
-  run_once: true
+  - name: Checking the installation of cfssl utilites..
+    apt:
+      name:
+        - golang-cfssl
+      state: present
+      update_cache: yes
 
 
-- name: Generation contol-plane certificates (Controller-Manager, Scheduler, Proxy, Service-Account, Kubectl)..
-  block:
+  - name: Checking a local directory for PKI..
+    file:
+      path: "{{ pkidir }}"
+      state: directory
+      mode: '0700'
+
+
+  - name: Generation ca-config.json from template..
+    template: 
+      src: ca-config.json.j2
+      dest: "{{ pkidir }}/ca-config.json"
+
+
+  - name: Generation ca-csr.json..
+    template:
+      src: csr-template.json.j2
+      dest: "{{ pkidir }}/ca-csr.json"
+    vars:
+      cert_cn: "Kubernetes-CA"
+      cert_org: "Kubernetes"
+
+
+  - name: Generation CA (Certificate Authority)-certificate..
+    shell:
+      cmd: "cfssl genkey -initca ca-csr.json | cfssljson -bare ca"
+      chdir: "{{ pkidir }}"
+      creates: ca.pem
+
+
   - name: Generation *csr.json files..
     template:
       src: "csr-template.json.j2"
@@ -71,12 +67,7 @@
       - { name: "kube-proxy" }
       - { name: "service-account" }
 
-  delegate_to: localhost
-  run_once: true
 
-
-- name: Generation certificates for worker-nodes..
-  block:
   - name: Generation *csr.json files..
     template:
       src: "csr-template.json.j2"
@@ -99,12 +90,7 @@
       creates: "{{ item }}.pem"
     loop: "{{ groups['workers'] }}"
 
-  delegate_to: localhost
-  run_once: true
 
-
-- name: Generation certificate for Kube-Apiserver..
-  block:
   - name: Generation *csr.json files..
     template:
       src: "csr-template.json.j2"
@@ -121,18 +107,13 @@
         -ca-key=ca-key.pem 
         -config=ca-config.json 
         -profile=kubernetes 
-        -hostname=10.32.0.1,127.0.0.1,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local,cluster.local{{ groups['masters'][0] }},{{ groups['masters'][0] }}.default.svc,{{ groups['masters'][0] }}.default.svc.cluster.local,{{ groups['masters'][0] }}.kubernetes.local,{{ hostvars[groups['masters'][0]]['ansible_host'] }} 
+        -hostname=10.32.0.1,127.0.0.1,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local,default.svc.cluster.local,svc.cluster.local,cluster.local,{{ groups['masters'][0] }}.cluster.local,{{ groups['masters'][0] }},{{ groups['masters'][0] }}.default.svc,{{ groups['masters'][0] }}.default.svc.cluster.local,{{ groups['masters'][0] }}.kubernetes.local,{{ hostvars[groups['masters'][0]]['ansible_host'] }} 
         kubernetes-csr.json | cfssljson -bare kubernetes
       chdir: "{{ pkidir }}"
       creates: "kubernetes.pem"
 
-  delegate_to: localhost
-  run_once: true
 
-
-- name: Cleaning up configuration files *.json *.csr 
-  shell:
-    cmd: "rm -f {{ pkidir }}/*.json {{ pkidir }}/*.csr"
-  delegate_to: localhost
-  run_once: true
-  failed_when: false 
+  - name: Cleaning up configuration files *.json *.csr 
+    shell:
+      cmd: "rm -f {{ pkidir }}/*.json {{ pkidir }}/*.csr"
+    failed_when: false 

@@ -76,6 +76,7 @@
     copy:
       src: "{{ item }}"
       dest: "/opt/cni/bin/"
+      mode: '0755'
     with_fileglob:
       - "{{ bindir }}/cni-plugins/*"
 

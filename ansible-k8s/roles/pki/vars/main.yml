@@ -1,3 +1,1 @@
 ---
-pkidir: "{{ playbook_dir }}/../pki-certificates"
-kubecfgdir: "{{ playbook_dir }}/../kubeconfigs"
