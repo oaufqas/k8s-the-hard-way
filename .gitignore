@@ -4,3 +4,6 @@ kubeconfigs/
 units/
 binaries/
 manifests/
+terraform.tfvars
+.terraform*
+terraform*
