@@ -1,0 +1,45 @@
+---
+- name: Settings up local dns-resolver..
+  when: inventory_hostname in groups['cluster_dns_resolver']
+  block:
+
+  - name: Checking the installation of dnsmasq..
+    apt:
+      name:
+        - dnsmasq
+      state: present
+      update_cache: no
+
+
+  - name: Disabling systemd-resolved service..
+    systemd:
+      name: systemd-resolved
+      state: stopped
+      enabled: no
+      
+
+  - name: Deleting configuration files..
+    file: 
+      path: "{{ item }}"
+      state: absent
+    loop:
+      - "/etc/resolv.conf"
+      - "/etc/dnsmasq.conf"
+      - "/etc/hosts"
+
+
+  - name: Copy configuration files..
+    template:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+    loop:
+      - { src: "dnsmasq.conf.j2", dest: "/etc/dnsmasq.conf" }
+      - { src: "hosts.j2", dest: "/etc/hosts" }
+      - { src: "resolv.conf.j2", dest: "/etc/resolv.conf" }
+
+
+  - name: Enable dnsmasq service..
+    systemd:
+      name: dnsmasq
+      state: restarted
+      enabled: yes

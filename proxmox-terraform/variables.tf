@@ -4,3 +4,4 @@ variable "dns_servers" {}
 variable "user" {}
 variable "password" {}
 variable "ssh_key" {}
+variable "cluster_domain" {}

@@ -21,6 +21,12 @@
       state: directory
 
 
+  - name: Deleting file /.kube/config..
+    file: 
+      path: "{{ real_home }}/.kube/config"
+      state: absent
+
+
   - name: Сopying manifest and configuration files..
     copy:
       src: "{{ item.src }}"

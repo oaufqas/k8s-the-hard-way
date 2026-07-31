@@ -3,7 +3,8 @@
   hosts: k8s
   gather_facts: false
   become: yes
-  roles: 
+  roles:
+    - cluster-dns-resolver
     - pki
     - kubeconfigs
     - units-configs
@@ -11,4 +12,3 @@
     - master-node
     - worker-node
     - cluster-network
-    

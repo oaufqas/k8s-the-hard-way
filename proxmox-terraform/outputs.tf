@@ -16,9 +16,14 @@ ${name} ansible_host=${split("/", node.ip)[0]} ansible_user=${var.user} pod_cidr
 %{ endif ~}
 %{ endfor ~}
 
+[cluster_dns_resolver]
+dns-resolver ansible_host=${var.dns_servers[0]} ansible_user=root ansible_sudo_pass=${var.password}
+
+
 [k8s:children]
 masters
 workers
+cluster_dns_resolver
 EOF
 
   depends_on = [proxmox_virtual_environment_vm.k8s_cluster]

@@ -2,7 +2,7 @@
 cluster_cidr: "10.200.0.0/16"
 cluster_dns: "10.32.0.10"
 service_ip_range: "10.32.0.0/24"
-cluster_domain: "cluster.local"
+cluster_domain: "kubernetes.local"
 master_node_addr: "control-plane.kubernetes.local"
 
 architecture: amd64 # amd64/arm64

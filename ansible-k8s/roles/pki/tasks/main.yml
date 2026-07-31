@@ -107,7 +107,7 @@
         -ca-key=ca-key.pem 
         -config=ca-config.json 
         -profile=kubernetes 
-        -hostname=10.32.0.1,127.0.0.1,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local,default.svc.cluster.local,svc.cluster.local,cluster.local,{{ groups['masters'][0] }}.cluster.local,{{ groups['masters'][0] }},{{ groups['masters'][0] }}.default.svc,{{ groups['masters'][0] }}.default.svc.cluster.local,{{ groups['masters'][0] }}.kubernetes.local,{{ hostvars[groups['masters'][0]]['ansible_host'] }} 
+        -hostname=10.32.0.1,127.0.0.1,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local,default.svc.cluster.local,svc.cluster.local,cluster.local,{{ groups['masters'][0] }}.cluster.local,{{ groups['masters'][0] }},{{ groups['masters'][0] }}.default.svc,{{ groups['masters'][0] }}.default.svc.cluster.local,{{ groups['masters'][0] }}.kubernetes.local,{{ hostvars[groups['masters'][0]]['ansible_host'] }},{{ master_node_addr }} 
         kubernetes-csr.json | cfssljson -bare kubernetes
       chdir: "{{ pkidir }}"
       creates: "kubernetes.pem"
