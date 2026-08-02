@@ -10,20 +10,26 @@
       state: directory
 
 
+  - name: Getting facts..
+    setup:
+      gather_subset: env
+    register: facts
+    
+
   - name: Determining the actual user and their home directory
-    ansible.builtin.set_fact:
-      real_home: "{{ ansible_env.HOME | default('/root') if (ansible_env.SUDO_USER is not defined) else '/home/' ~ ansible_env.SUDO_USER }}"
+    set_fact:
+      home_dir: "{{ ansible_facts['env']['HOME'] | default('/root') if (ansible_facts['env']['SUDO_USER'] is not defined) else '/home/' ~ ansible_facts['env']['SUDO_USER'] }}"
 
 
   - name: Checking a local directory for kubeconfig..
     file:
-      path: "{{ real_home }}/.kube"
+      path: "{{ home_dir }}/.kube"
       state: directory
 
 
   - name: Deleting file /.kube/config..
     file: 
-      path: "{{ real_home }}/.kube/config"
+      path: "{{ home_dir }}/.kube/config"
       state: absent
 
 
@@ -33,7 +39,7 @@
       dest: "{{ item.dest }}"
     loop:
       - { src: 'kube-apiserver-to-kubelet.yaml', dest: "{{ manifestdir }}/" }
-      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "{{ real_home }}/.kube/config" }
+      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "{{ home_dir }}/.kube/config" }
 
 
   - name: Generation manifest files..

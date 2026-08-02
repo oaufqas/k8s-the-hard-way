@@ -13,7 +13,18 @@
       - '/var/lib/kubelet/'
       - '/var/run/kubernetes/'
       - '/var/lib/kube-proxy/'
-      
+
+
+  - name: Getting facts..
+    setup:
+      gather_subset: env
+    register: facts
+    
+
+  - name: Determining the actual user and their home directory..
+    set_fact:
+      home_dir: "{{ ansible_facts['env']['HOME'] | default('/root') if (ansible_facts['env']['SUDO_USER'] is not defined) else '/home/' ~ ansible_facts['env']['SUDO_USER'] }}"
+
 
   - name: Сhecking for the existence of config directories (Open for read)..
     file:
@@ -24,7 +35,7 @@
       - '/etc/cni/net.d'
       - '/opt/cni/bin'
       - '/etc/containerd/'
-      - '/home/{{ ansible_user }}/.kube/'
+      - '{{ home_dir }}/.kube/'
 
 
   - name: Copy configuration files and certificates on worker-nodes (Strict permissions)..
@@ -52,7 +63,7 @@
       - { src: "{{ unitsdir }}/containerd.service", dest: "/etc/systemd/system/" }
       - { src: "{{ unitsdir }}/kubelet.service", dest: "/etc/systemd/system/" }
       - { src: "{{ unitsdir }}/kube-proxy.service", dest: "/etc/systemd/system/" }
-      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "/home/{{ ansible_user }}/.kube/config" }
+      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "{{ home_dir }}/.kube/config" }
 
 
   - name: Copy binaries files on worker-nodes..

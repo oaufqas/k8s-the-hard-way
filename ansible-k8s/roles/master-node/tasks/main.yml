@@ -12,6 +12,18 @@
       - '/var/lib/kubernetes/'
       - '/var/lib/etcd/'
 
+
+  - name: Getting facts..
+    setup:
+      gather_subset: env
+    register: facts
+    
+
+  - name: Determining the actual user and their home directory..
+    set_fact:
+      home_dir: "{{ ansible_facts['env']['HOME'] | default('/root') if (ansible_facts['env']['SUDO_USER'] is not defined) else '/home/' ~ ansible_facts['env']['SUDO_USER'] }}"
+
+
   - name: Сhecking for the existence of config directories (Open for read)..
     file:
       path: "{{ item }}"
@@ -20,7 +32,7 @@
     loop: 
       - '/etc/etcd/'
       - '/etc/kubernetes/config/'
-      - '/home/{{ ansible_user }}/.kube/'
+      - '{{ home_dir }}/.kube/'
 
 
   - name: Copy configuration files and certificates on control-plane (Strict permissions)..
@@ -54,7 +66,7 @@
       - { src: "{{ unitsdir }}/kube-apiserver.service", dest: "/etc/systemd/system/" }
       - { src: "{{ unitsdir }}/kube-controller-manager.service", dest: "/etc/systemd/system/" }
       - { src: "{{ unitsdir }}/kube-scheduler.service", dest: "/etc/systemd/system/" }
-      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "/home/{{ ansible_user }}/.kube/config" }
+      - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "{{ home_dir }}/.kube/config" }
 
 
   - name: Copy binaries files on control-plane..
