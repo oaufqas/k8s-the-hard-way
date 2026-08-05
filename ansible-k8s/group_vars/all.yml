@@ -3,7 +3,10 @@ cluster_cidr: "10.200.0.0/16"
 cluster_dns: "10.32.0.10"
 service_ip_range: "10.32.0.0/24"
 cluster_domain: "kubernetes.local"
-master_node_addr: "control-plane.kubernetes.local"
+master_node_addr: "server.kubernetes.local"
+is_ha_cluster: "{{ groups['masters'] | length > 1 }}"
+master_node_entry_ip: "{{ hostvars[groups['masters'][0]]['ansible_host'] if not (is_ha_cluster | bool) else hostvars[groups['cluster_dns_resolver'][0]]['ansible_host'] }}"
+
 
 architecture: amd64 # amd64/arm64
 encryption_key: "ncmbO+4ZWyNvMnc7JACvhuqGAKnspkuzkeVVBbaV2Cw=" # head -c 32 /dev/urandom | base64

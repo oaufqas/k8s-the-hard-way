@@ -62,8 +62,8 @@
       - { src: "{{ pkidir }}/kubernetes.pem", dest: "/etc/etcd/" }
       - { src: "{{ pkidir }}/kubernetes-key.pem", dest: "/etc/etcd/" }
       - { src: "{{ cfgdir }}/kube-scheduler.yaml", dest: "/etc/kubernetes/config" }
-      - { src: "{{ unitsdir }}/etcd.service", dest: "/etc/systemd/system/" }
-      - { src: "{{ unitsdir }}/kube-apiserver.service", dest: "/etc/systemd/system/" }
+      - { src: "{{ unitsdir }}/etcd-{{ inventory_hostname }}.service", dest: "/etc/systemd/system/etcd.service" }
+      - { src: "{{ unitsdir }}/kube-apiserver-{{ inventory_hostname }}.service", dest: "/etc/systemd/system/kube-apiserver.service" }
       - { src: "{{ unitsdir }}/kube-controller-manager.service", dest: "/etc/systemd/system/" }
       - { src: "{{ unitsdir }}/kube-scheduler.service", dest: "/etc/systemd/system/" }
       - { src: "{{ kubecfgdir }}/admin.kubeconfig", dest: "{{ home_dir }}/.kube/config" }

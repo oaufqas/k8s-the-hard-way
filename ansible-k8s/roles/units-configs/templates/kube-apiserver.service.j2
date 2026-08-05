@@ -4,7 +4,7 @@ Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
 ExecStart=/usr/local/bin/kube-apiserver \
-  --advertise-address={{ hostvars[groups['masters'][0]]['ansible_host'] }} \
+  --advertise-address={{ host_addr }} \
   --apiserver-count=1 \
   --allow-privileged=true \
   --audit-log-maxage=30 \
@@ -18,7 +18,7 @@ ExecStart=/usr/local/bin/kube-apiserver \
   --etcd-cafile=/var/lib/kubernetes/ca.pem \
   --etcd-certfile=/var/lib/kubernetes/kubernetes.pem \
   --etcd-keyfile=/var/lib/kubernetes/kubernetes-key.pem \
-  --etcd-servers=https://127.0.0.1:2379 \
+  --etcd-servers={% if is_ha_cluster %}{% for host in groups['masters'] %}https://{{ hostvars[host]['ansible_host'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}{% else %}https://127.0.0.1:2379{% endif %} \
   --event-ttl=1h \
   --encryption-provider-config=/var/lib/kubernetes/encryption-config.yaml \
   --kubelet-certificate-authority=/var/lib/kubernetes/ca.pem \

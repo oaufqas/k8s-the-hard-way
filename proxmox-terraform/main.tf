@@ -1,8 +1,8 @@
 locals {
     k8s_nodes = {
-        "control-plane" = { id = 110, ip = "192.168.100.10/24" }
-        "node-0" = { id = 111, ip = "192.168.100.11/24" }
-        "node-1" = { id = 112, ip = "192.168.100.12/24" }
+        "control-plane-0" = { id = 110, ip = "192.168.100.10/24", group = "masters" }
+        "control-plane-1" = { id = 111, ip = "192.168.100.12/24", group = "masters" }
+        "node-0" = { id = 112, ip = "192.168.100.11/24", group = "workers" }
     }
 }
 
@@ -40,12 +40,12 @@ resource "proxmox_virtual_environment_vm" "k8s_cluster" {
         }
 
         dns {
-            servers = [ "192.168.100.20" ]
+            servers = [ var.dns_server ]
             domain = var.cluster_domain
         }
 
         user_account {
-            username = "k8s"
+            username = var.user
             password = var.password
             keys = [
                 "${var.ssh_key}"
@@ -82,7 +82,7 @@ resource "proxmox_virtual_environment_container" "dns-resolver" {
 
         ip_config {
             ipv4 {
-                address = "${var.dns_servers[0]}/24"
+                address = "${var.dns_server}/24"
                 gateway = var.gateway
             }
         }

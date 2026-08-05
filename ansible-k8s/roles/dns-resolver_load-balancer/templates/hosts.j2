@@ -2,11 +2,13 @@
 
 {% for host in groups['all'] %}
 {% if hostvars[host].ansible_host is defined and host in groups['masters'] %}
-{{ hostvars[host].ansible_host }} {{ host }}.{{ cluster_domain }} {{ master_node_addr }} {{ host }}
+{{ hostvars[host].ansible_host }} {{ host }}.{{ cluster_domain }} {{ host }}
 {% endif %}
 {% if hostvars[host].ansible_host is defined and (host not in groups['cluster_dns_resolver'] and host not in groups['masters']) %}
 {{ hostvars[host].ansible_host }} {{ host }}.{{ cluster_domain }} {{ host }}
 {% endif %}
 {% endfor %}
+
+{{ master_node_entry_ip }} {{ master_node_addr }}
 
 {{ ansible_host }} {{ inventory_hostname }}.{{ cluster_domain }} {{ inventory_hostname }}

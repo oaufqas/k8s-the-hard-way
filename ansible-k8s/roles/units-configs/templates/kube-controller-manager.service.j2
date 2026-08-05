@@ -15,6 +15,7 @@ ExecStart=/usr/local/bin/kube-controller-manager \
   --service-cluster-ip-range={{ service_ip_range }} \
   --use-service-account-credentials=true \
   --allocate-node-cidrs=true \
+  --leader-elect={{ 'true' if is_ha_cluster else 'false' }} \
   --v=2
 Restart=on-failure
 RestartSec=5

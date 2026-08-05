@@ -38,9 +38,26 @@
     loop:
       - { src: 'encryption-config.yaml.j2', dest: "{{ cfgdir }}/encryption-config.yaml" }
       - { src: 'kube-proxy-config.yaml.j2', dest: "{{ cfgdir }}/kube-proxy-config.yaml" }
-      - { src: 'etcd.service.j2', dest: "{{ unitsdir }}/etcd.service" }
-      - { src: 'kube-apiserver.service.j2', dest: "{{ unitsdir }}/kube-apiserver.service" }
       - { src: 'kube-controller-manager.service.j2', dest: "{{ unitsdir }}/kube-controller-manager.service"}
+
+
+  - name: Generation etcd-services files..
+    template:
+      src: "etcd.service.j2"
+      dest: "{{ unitsdir }}/etcd-{{ item }}.service"
+    vars:
+      etcd_name: "{{ item }}"
+      host_addr: "{{ hostvars[item]['ansible_host'] }}"
+    loop: "{{ groups['masters'] }}"
+
+
+  - name: Generation kube-apiserver file..
+    template:
+      src: "kube-apiserver.service.j2"
+      dest: "{{ unitsdir }}/kube-apiserver-{{ item }}.service"
+    vars:
+      host_addr: "{{ hostvars[item]['ansible_host'] }}"
+    loop: "{{ groups['masters'] }}"
 
 
   - name: Generation kubelet-config files..

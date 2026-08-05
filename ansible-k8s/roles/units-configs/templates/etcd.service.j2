@@ -5,7 +5,7 @@ Documentation=https://github.com/etcd-io/etcd
 [Service]
 Type=notify
 ExecStart=/usr/local/bin/etcd \
-  --name=controller \
+  --name={{ etcd_name }}-etcd \
   --cert-file=/etc/etcd/kubernetes.pem \
   --key-file=/etc/etcd/kubernetes-key.pem \
   --peer-cert-file=/etc/etcd/kubernetes.pem \
@@ -14,12 +14,12 @@ ExecStart=/usr/local/bin/etcd \
   --peer-trusted-ca-file=/etc/etcd/ca.pem \
   --peer-client-cert-auth \
   --client-cert-auth \
-  --initial-advertise-peer-urls=https://127.0.0.1:2380 \
-  --listen-peer-urls=https://127.0.0.1:2380 \
-  --listen-client-urls=https://127.0.0.1:2379 \
-  --advertise-client-urls=https://127.0.0.1:2379 \
+  --initial-advertise-peer-urls=https://{% if is_ha_cluster %}{{ host_addr }}{% else %}127.0.0.1{% endif %}:2380 \
+  --listen-peer-urls=https://{% if is_ha_cluster %}{{ host_addr }}{% else %}127.0.0.1{% endif %}:2380 \
+  --listen-client-urls={% if is_ha_cluster %}https://{{ host_addr }}:2379,{% endif %}https://127.0.0.1:2379 \
+  --advertise-client-urls=https://{% if is_ha_cluster %}{{ host_addr }}{% else %}127.0.0.1{% endif %}:2379 \
   --initial-cluster-token={{ cluster_etcd_token }} \
-  --initial-cluster=controller=https://127.0.0.1:2380 \
+  --initial-cluster={% if is_ha_cluster %}{% for host in groups['masters'] %}{{ host }}-etcd=https://{{ hostvars[host]['ansible_host'] }}:2380{% if not loop.last %},{% endif %}{% endfor %}{% else %}{{ etcd_name }}-etcd=https://127.0.0.1:2380{% endif %} \
   --initial-cluster-state=new \
   --data-dir=/var/lib/etcd
 Restart=on-failure

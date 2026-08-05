@@ -23,7 +23,6 @@
       path: "{{ item }}"
       state: absent
     loop:
-      - "/etc/resolv.conf"
       - "/etc/dnsmasq.conf"
       - "/etc/hosts"
 
@@ -35,7 +34,6 @@
     loop:
       - { src: "dnsmasq.conf.j2", dest: "/etc/dnsmasq.conf" }
       - { src: "hosts.j2", dest: "/etc/hosts" }
-      - { src: "resolv.conf.j2", dest: "/etc/resolv.conf" }
 
 
   - name: Enable dnsmasq service..
