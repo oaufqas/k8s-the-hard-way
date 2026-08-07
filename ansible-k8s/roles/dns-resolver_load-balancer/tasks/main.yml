@@ -41,3 +41,31 @@
       name: dnsmasq
       state: restarted
       enabled: yes
+
+
+
+- name: Settings up load balancer (masters > 1)..
+  when: inventory_hostname in groups['cluster_dns_resolver'] and is_ha_cluster
+  block:
+
+  - name: Checking the installation of haproxy..
+    apt:
+      name: haproxy
+      state: present
+      update_cache: no
+
+
+  - name: Copy haproxy.conf..
+    template:
+      src: haproxy.cfg.j2
+      dest: /etc/haproxy/haproxy.cfg
+    register: haproxy_config_updated
+
+
+  - name: Enable haproxy service..
+    systemd_service:
+      name: haproxy
+      state: restarted
+      enabled: true
+      daemon_reload: true
+    when: haproxy_config_updated.changed

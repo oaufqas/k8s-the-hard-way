@@ -24,10 +24,7 @@
       dest: "{{ item.dest }}"
     loop:
       - { src: 'containerd-config.toml', dest: "{{ cfgdir }}/containerd-config.toml" }
-      - { src: 'kube-scheduler.yaml', dest: "{{ cfgdir }}/kube-scheduler.yaml" }
       - { src: 'containerd.service', dest: "{{ unitsdir }}/containerd.service" }
-      - { src: 'kube-proxy.service', dest: "{{ unitsdir }}/kube-proxy.service" }
-      - { src: 'kube-scheduler.service', dest: "{{ unitsdir }}/kube-scheduler.service" }
       - { src: 'kubelet.service', dest: "{{ unitsdir }}/kubelet.service" }
 
 
@@ -36,8 +33,9 @@
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
     loop:
+      - { src: 'kube-scheduler.service.j2', dest: "{{ unitsdir }}/kube-scheduler.service" }
       - { src: 'encryption-config.yaml.j2', dest: "{{ cfgdir }}/encryption-config.yaml" }
-      - { src: 'kube-proxy-config.yaml.j2', dest: "{{ cfgdir }}/kube-proxy-config.yaml" }
+      - { src: 'kube-proxy.service.j2', dest: "{{ unitsdir }}/kube-proxy.service" }
       - { src: 'kube-controller-manager.service.j2', dest: "{{ unitsdir }}/kube-controller-manager.service"}
 
 

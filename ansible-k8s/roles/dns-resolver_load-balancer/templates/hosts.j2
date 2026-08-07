@@ -4,7 +4,7 @@
 {% if hostvars[host].ansible_host is defined and host in groups['masters'] %}
 {{ hostvars[host].ansible_host }} {{ host }}.{{ cluster_domain }} {{ host }}
 {% endif %}
-{% if hostvars[host].ansible_host is defined and (host not in groups['cluster_dns_resolver'] and host not in groups['masters']) %}
+{% if hostvars[host].ansible_host is defined and host in groups['workers'] %}
 {{ hostvars[host].ansible_host }} {{ host }}.{{ cluster_domain }} {{ host }}
 {% endif %}
 {% endfor %}

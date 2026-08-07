@@ -4,7 +4,8 @@ Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
 ExecStart=/usr/local/bin/kube-scheduler \
-  --config=/etc/kubernetes/config/kube-scheduler.yaml \
+  --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig \
+  --leader-elect={{ 'true' if is_ha_cluster else 'false' }} \
   --v=2
 Restart=on-failure
 RestartSec=5

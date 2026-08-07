@@ -50,7 +50,6 @@
       - { src: "{{ kubecfgdir }}/{{ inventory_hostname }}.kubeconfig", dest: "/var/lib/kubelet/kubeconfig" }
       - { src: "{{ cfgdir }}/kubelet-config-{{ inventory_hostname }}.yaml", dest: "/var/lib/kubelet/kubelet-config.yaml" }
       - { src: "{{ kubecfgdir }}/kube-proxy.kubeconfig", dest: "/var/lib/kube-proxy/kubeconfig" }
-      - { src: "{{ cfgdir }}/kube-proxy-config.yaml", dest: "/var/lib/kube-proxy/" }
 
 
   - name: Copy configuration files, units and certificates on worker-nodes (Open for read)..

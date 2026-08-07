@@ -4,7 +4,7 @@
   gather_facts: false
   become: yes
   roles:
-    # - dns-resolver_load-balancer
+    - dns-resolver_load-balancer
     - pki
     - kubeconfigs
     - units-configs

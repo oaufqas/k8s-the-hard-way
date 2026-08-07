@@ -17,7 +17,7 @@
         kubectl config set-cluster kubernetes-the-hard-way \
           --certificate-authority={{ pkidir }}/ca.pem \
           --embed-certs=true \
-          --server=https://{{ master_node_addr }}:6443 \
+          --server=https://{{ item.server_address }}:6443 \
           --kubeconfig={{ kubecfgdir }}/{{ item.component_name }}.kubeconfig &&
 
         kubectl config set-credentials {{ item.component_user }} \
@@ -35,10 +35,10 @@
       chdir: "{{ kubecfgdir }}"
       creates: "{{ item.component_name }}.kubeconfig"
     loop: 
-      - { component_name: "kube-proxy", component_user: "system:kube-proxy" }
-      - { component_name: "kube-controller-manager", component_user: "system:kube-controller-manager" }
-      - { component_name: "kube-scheduler", component_user: "system:kube-scheduler" }
-      - { component_name: "admin", component_user: "admin" }
+      - { component_name: "kube-proxy", component_user: "system:kube-proxy", server_address: "{{ master_node_addr }}" }
+      - { component_name: "kube-controller-manager", component_user: "system:kube-controller-manager", server_address: "127.0.0.1" }
+      - { component_name: "kube-scheduler", component_user: "system:kube-scheduler", server_address: "127.0.0.1" }
+      - { component_name: "admin", component_user: "admin", server_address: "{{ master_node_addr }}" }
 
 
   - name: Generation kubeconfigs for worker-nodes..

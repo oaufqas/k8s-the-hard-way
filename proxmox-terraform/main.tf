@@ -1,8 +1,8 @@
 locals {
     k8s_nodes = {
         "control-plane-0" = { id = 110, ip = "192.168.100.10/24", group = "masters" }
-        "control-plane-1" = { id = 111, ip = "192.168.100.12/24", group = "masters" }
-        "node-0" = { id = 112, ip = "192.168.100.11/24", group = "workers" }
+        "worker-0" = { id = 111, ip = "192.168.100.11/24", group = "workers" }
+        "worker-1" = { id = 112, ip = "192.168.100.12/24", group = "workers" }
     }
 }
 
